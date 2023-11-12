@@ -1,0 +1,540 @@
+---
+# layout: post
+title:  Audio Art - Turning A Spoken Memory Into Art
+author: bmistry       # see _data/authors.yml
+date:   2023-11-06 11:33:00 +0000
+categories: coding 
+permalink: /:year/:month/:day/:title.html
+categories: [Blogs, Coding]
+tags: [python, matplotlib, fourier transform]
+image: https://raw.githubusercontent.com/bmistry4/audio-art/main/images/qrcode/blog/save/module_drawer/qrcode_bkgThickFloralBorder_logoWaves_dpi-600-ModuleDrawers.png
+# comments: false
+---
+
+## Project Summary
+
+- **What?** Turn an audio clip into a piece of art using maths and Python.
+
+
+- **Why?** (_Motivation/Background story_.) A few months ago, someone close to me had gone on a holiday to Wales, 
+specifically, to climb Mount Snowdon. (Snowdon is the highest mountain in Wales, with a height of 1,085m!) On a good day 
+this is a mighty LONG trek (~5-7 hrs), so as you can imagine, on a stormy day this is a might LONG and HARD trek. 
+With it being the typical British weather, of course there was a storm, and with this person's luck, of course it 
+was a big one (Storm Antoni to be specific)! Long story short nothing of theirs went to plan. This included the weather, 
+the time of the hike, finding the spare torch batteries, finding the train to back down the mountain, or remembering their 
+toothbrush during their stay! But even with all those setbacks and awful conditions, they still managed to do the hike! 
+After completing the hike (and regaining the feeling in their fingers), I was sent an audio message (~15-16 mins long) 
+explaining their journey from start to end. Listening to their monologue, I thought "Wow, what a journey and heck of an 
+experience!". I wanted to make something personal for them as a reminder of their little adventure, and since art is 
+fun and expressive I thought why not!
+
+
+- **Final Result:** See final canvas print [here](#canvas-print)! 
+
+- **Code**: [Here](https://github.com/bmistry4/audio-art)
+
+- **How?** Read this blog!
+
+
+## The Data: Dealing with Audio
+
+Let's first talk about the data we will work with - Audio. 
+To understand how the art pieces are created requires knowing about the time and frequency domains. 
+I'll explain it all below! 
+
+### Back to Basics: A Wave 
+
+> Handy (additional) resource(s): 
+> - Blog post: [https://towardsdatascience.com/learning-from-audio-time-domain-features-4543f3bda34c](https://towardsdatascience.com/learning-from-audio-time-domain-features-4543f3bda34c)
+{: .prompt-info }
+
+
+Audio signals are just waves, so let's consider a wave from a Physics perspective: 
+
+![physics-wave.png](https://cdn1.byjus.com/wp-content/uploads/2023/03/Wave-Updated-1.png)
+_Image taken from [https://cdn1.byjus.com/wp-content/uploads/2023/03/Wave-Updated-1.png](https://cdn1.byjus.com/wp-content/uploads/2023/03/Wave-Updated-1.png)_
+
+From the above image, keep in mind the following points:
+- The wave represents a **signal**
+- **Time** domain: The axis is over time
+- Repetition: A wave is a repeating pattern
+  - One cycle is called an **oscillation** 
+- **Frequency**: Is the number of oscillations per second, measured in hertz (Hz)
+- **Amplitude/Power**: The height of the wave
+  - Amplitude is the strength of the wave which is related to the **loudness** of a sound; higher amplitude means louder, lower amplitude means quieter
+
+An audio signal is a wave that can be interpreted in either the **time domain** or the **frequency domain**.
+
+### Time Domain: Time vs Amplitude
+Interpreting an audio signal in the time domain allows for a simple way to visualise the audio. 
+The visualisation is a 2D plot showing how the amplitude of the audio signal changes over time. 
+- **x-axis (time)**: Refers to how far along you are, in seconds, into the audio clip.
+- **y-axis (amplitude)**: Refers to the sound intensity.
+  - Use the `scipy.io.wavfile` [(docs)](https://docs.scipy.org/doc/scipy/reference/generated/scipy.io.wavfile.read.html) module to read the audio file. 
+    - The returned data is given in a `numpy.array` and the data type is dependent on the audio files bit-depth (the number of bits in each sample). For my case, I was dealing with a 32-bit integer PCM.
+      - **PCM = pulse-code modulation**. PCM is an uncompressed and lossless digital audio format.
+      <!-- - (The data is not in decibels (a common unit of sound pressure level) but can be converted from 32-bit audio data to decibels.) -->
+
+Below, is an example of a time domain plot for my audio. 
+Each minute's worth of data is coloured differently. 
+
+![time_domain_full.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/time_domain_full.png)
+_See [code](https://github.com/bmistry4/audio-art/blob/main/src/time_domain.py)_
+
+One question you might be asking is why does the plot not look very much like a "sound wave"?
+The answer is simply that there is a LOT of data points plotted every second. 
+Every second, there are 48,000 data points to plot and this is called the **sample frequency/sample rate**. 
+For the audio clip I used, there's 45,025,816 data points (with the full clip being ~983 seconds long). 
+That's a lot of points to plot! 
+
+To convince you, let me zoom into the plot and consider only the first 10 seconds worth of data...
+
+![time_domain_10s.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/time_domain_10s.png)
+
+Looks more like a classic sound wave right? 
+If we really zoom in and only consider the first 0.001 seconds of data then we can even see a wave!
+
+![time_domain_1e-3s.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/time_domain_1e-3s.png)
+
+That's everything you need to know about the time domain. 
+Now, let's talk about the frequency domain.
+
+### Frequency Domain: Frequency vs Amplitude 
+
+> Handy (additional) resource(s): 
+> - Excellent blog: [https://realpython.com/python-scipy-fft/](https://realpython.com/python-scipy-fft/)
+> - Video for visual learners (3Blue1Brown): [https://www.youtube.com/watch?v=spUNpyF58BY&t=835s](https://www.youtube.com/watch?v=spUNpyF58BY&t=835s)
+> - Short video explanation (with maths): [https://www.youtube.com/watch?v=8V6Hi-kP9EE&t=207s](https://www.youtube.com/watch?v=8V6Hi-kP9EE&t=207s)
+{: .prompt-info }
+
+The frequency domain is another way to consider a signal. 
+To get to the frequency domain from the time domain we need to apply the **Fourier Transform (FT)**. 
+
+#### What is the Fourier Transform (FT)?
+The FT is pretty neat. It can take a signal and tells you the simple (sin/cos) waves that make it up.
+The resulting simple waves can be expressed solely by their frequency and amplitude values.
+
+You can plot these to visualise how the amplitudes of the signal changes over the different frequencies. 
+Hence, the FT takes a signal (representing a function in the time domain) and transforms it into the frequency domain. 
+
+![fourier-transform.gif](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/fourier-transform.gif)
+_Source: [https://en.wikipedia.org/wiki/Frequency_domain](https://en.wikipedia.org/wiki/Frequency_domain)_
+
+<!-- <p align="center">
+  <img src="https://raw.githubusercontent.com/bmistry4/audio-art/main/images/fourier-transform.gif" width="60%"/>
+  <br>
+  (source: <a href="https://en.wikipedia.org/wiki/Frequency_domain">https://en.wikipedia.org/wiki/Frequency_domain</a>)
+</p> -->
+
+[//]: # (https://en.wikipedia.org/wiki/File:Fourier_transform_time_and_frequency_domains_&#40;small&#41;.gif)
+
+Wikipedia provides this handy gif for a visual intuition on what the fourier transform does. 
+The red signal is the original function in the time domain. Applying the FT you breakdown the red signal into multiple
+blue waves of different frequencies. Taking the amplitude of each blue wave and plotting it in the frequency domain you're done! 
+
+[//]: # (If you about music, think of the FT as transforming the sound of a chord into its constituent pitches of different intensities. )
+
+Not only can you go from the time domain to frequency domain, you can also go the other way around since the 
+transformation is invertible (i.e., **inverse FT**)!
+
+There are two types of FT, the **continuous FT (CFT)** and the **discrete FT (DFT)**. 
+As the names imply, the CFT is applied to continuous signals while the DFT is applied to discrete signals. 
+Audio files (e.g. wav, ogg, or mp3)  are an example of discrete signals as they all use digital sampling to encode the data. 
+
+#### What's the FAST Fourier Transform (FFT)
+The FFT is an algorithm to calculate the DFT. As the name implies, it's fast to compute so is used alot in practice. 
+You can use scipy to calculate the DFT using FFT (see `scipy.fft` [docs](https://docs.scipy.org/doc/scipy/tutorial/fft.html)):
+
+![frequency_domain_full.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/frequency_domain_full.png)
+_See [code](https://github.com/bmistry4/audio-art/blob/main/src/frequency_domain.py)_
+
+Applying the FFT will return an array of complex values representing the amplitude and phase of a sinusoidal component at a corresponding frequency.
+Notice the symmetry about the Y-axis (amplitude axis). 
+This **conjugate symmetry** in the frequency domain, is a result of the FFT being applied to a real-valued signal (see explanation [here](https://dsp.stackexchange.com/a/4827)).
+Due to this property, you can just plot the positive X-axis domain like below:
+
+![frequency_domain_full_positiveXonly.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/frequency_domain_full_positiveXonly.png)
+
+One last thing. See how, in the x-axis for the above figures, the highest frequency is at 24,000 Hz (i.e., half the sampling rate).
+This is no coincidence, and is equal to the **Nyquist frequency** for the signal. 
+The Nyquist frequency is a well known concept in signal processing and represents half the sampling rate of a discrete signal. 
+
+#### Polar Coordinates - What Are They? 
+If I asked you to plot the point (2,3) on a 2-dimensional axis you'd probably draw a cross to represent the X-Y axes and
+then plot a point that is 2 to the left and 3 up of the origin (0,0). If that's what you did then congratulations, 
+you're working with **cartesian coordinates**! 
+
+Now **polar coordinates** provide an alternative way to represent the position of a point in a plane.
+Instead of using the x and y coordinates for a point’s position like in cartesian coordinates, polar coordinates use a 
+**magnitude r** and **phase θ**. 
+A point P is defined by **(r,θ)**, where r is the distance from the origin and the θ is an angle (measured in degrees/radians) 
+starting from the origin pointing in positive x-axis direction to the point P. 
+You can convert between the cartesian and polar coordinates, but that is out of the score of this blog. 
+
+There can be cases where it's easier to represent/interpret data using polar coordinates than cartesian, so it's handy 
+to know about! One such case is with complex numbers, which are exactly the kind of values returned when applying the FFT. 
+
+
+## The Art: Making Asethetic Pictures From Audio
+Keeping to the mindset of _'it's not a bug, it's a feature'_ but for an art context - _'it's not ugly, it's intentional"_,
+I had two personal criteria when creating the art:
+
+1. Make it look nice
+1. Make it meaningful
+
+Since first is subjective, I'll just my gut instinct. 
+The second is because I want this art piece to be a memorable gift. 
+
+### Data Sparsity Methods
+A problem I encountered early on was the issue of dealing with the masses of data points. 
+The audio clip was _nearly 16 mins_ of data with a _sample rate of 48000 Hz_. 
+That means for each second there was 48,000 separate data points, meaning I had to somehow express _~45 million data 
+points_ into a single image. 
+To deal with this, I had a spasification step to reduce the number of data points. 
+This step will be used in all the art pieces. 
+I considered three ways: 
+1. `random`: drop random points until you're within a max sample threshold
+1. `drop`: drop every other point repeatedly until you're within a max sample threshold
+1. `window-and-random`: take an average over a non-overlapping sliding window
+   - The window size is `data // max_samples`
+   - If the window size is 1 then just use the `random` method to drop data points
+
+
+### Funky Frequency Waves
+**Code**: [Click here](https://github.com/bmistry4/audio-art/blob/main/src/frequency_waves_overlapping.py)
+
+**Motivation**: Since audio signals are all about waves, my first go to was to create overlapping waves be analogous to the hills in the mountain. 
+I wanted to keep in the time domain for this one. 
+That way you see the changes in the voice over time which would represent the challenge of climbing up a mountain.
+I envisioned something like breaking the audio clip into small intervals and plotting each interval using time vs amplitude. 
+Each interval would be stacked ontop of eachother since having them all one after another would be too long horizontally. 
+
+#### Stack plot with smoothing
+To create the overlapping effect, I used a [stack plot](https://python-graph-gallery.com/streamchart-basic-matplotlib/). 
+The 1st subplot below looks very spiky, so to smooth it out you can use a Gaussian Kernel. 
+For a more rigorous smoothing, you can also use a grid version of Gaussian smoothing where the weights for smoothing 
+are across a grid of coordinates rather than just around the x-coordinates. 
+Now we're getting somewhere!
+
+![0-gaussian.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/freq-waves-overlapping/0-gaussian.png)
+
+#### Colour and Transparency
+Ok, let's add some colour and transparency. 
+For colouring, we'll define a colour to start at and a colour to end at and interpolate between them so each bin (wave)
+has its own colour. Let's also do the same for transparency aswell (starting at 0.8 and reducing to 0.4).
+
+![1-gaussian-cols-alphas.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/freq-waves-overlapping/1-gaussian-cols-alphas.png)
+
+#### Stackplot Baseline Argument
+The matplotlib stackplot has a parameter called `baseline` which controls where the stacking happens. Options include: 
+- `zero` (default) = have a baseline at y=0 and stack on there. 
+- `wiggle` = minimizes the sum of the squared slopes
+- `sym` = like zero, but is symmetric
+
+Let's see what these do to the image: 
+
+![2-gaussianBaselines-cols-alphas.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/freq-waves-overlapping/2-gaussianBaselines-cols-alphas.png)
+
+I like the sym option best, so will use it for the remaining options. 
+
+#### Sparsity Methods
+At this point, can see the intricacies of the layered waves quite nicely thanks to the colouring and transparency. 
+Hence, it's a good time to see the effect of the different sparsity methods I mentioned [earlier](#data-sparsity-methods). 
+So far, the above plots have been using the "random" method. 
+If we compare all three methods we see that each will give quite a different result! 
+
+![3-gaussianBaselines-cols-alphas-sparsify.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/freq-waves-overlapping/3-gaussianBaselines-cols-alphas-sparsify.png)
+
+
+#### Additional Parameters 
+Let's now look at 5 different parameters which can greatly influence the look of the picture. They are the gaussian 
+standard deviation and gaussian offset, the number and size of the bins, and the colouring of the plot. 
+The best choice for these parameters are completely subjective so will vary for each person. 
+
+The _Gaussian standard deviation_ used for the Gaussian smoothing controls will control how smooth the waves will look like. 
+The larger the standard deviation, the smoother the wave:
+
+![4-gaussianSym-sdev.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/freq-waves-overlapping/4-gaussianSym-sdev.png)
+
+The _Gaussian offset_ is used when generating the grid for smoothing. It controls how much to offset the min and max 
+values of the grid compared to the domain of the x-values. 
+You'll find that negative offset values stretch out the waves, while positive values will close at the tips: 
+
+![5-gaussianSym-gaussianOffset.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/freq-waves-overlapping/5-gaussianSym-gaussianOffset.png)
+
+To get different waves to overlap, I would chunk the data into equal sized bins. 
+Changing the _number of bins_ controls the number of different waves we want stacked together: 
+
+![6-gaussianSym-binsNum.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/freq-waves-overlapping/6-gaussianSym-binsNum.png)
+
+And changing the _size of the bin_ controls how many data points can be used to define a single wave. 
+A larger size means more points so more fluctuating waves. 
+
+![7-gaussianSym-binsSize.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/freq-waves-overlapping/7-gaussianSym-binsSize.png)
+
+Finally, we can also try out different _colour schemes_: 
+
+![8-gaussianSym-colours.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/freq-waves-overlapping/8-gaussianSym-colours.png)
+
+
+### Turning Polar: Revolving Beams
+**Code**: [Click here](https://github.com/bmistry4/audio-art/blob/main/src/polar_slices.py)
+
+**Motivation**: Instead of waves which are sequential, how about something a bit more circular. 
+So plot points going around a circle, over and over again. 
+Since the FFT returns _complex numbers_ it naturally allows us to dabble with polar plots since complex numbers can 
+also be expressed as [polar coordinates](#polar-coordinates---what-are-they-)!
+Converting the complex numbers from the cartesian form to the polar form results in a magnitude and phase for each data point. 
+
+#### Basic Polar Plot
+To start, assume the data has been preprocessed using the "random" sparsification technique mentioned earlier.  
+Now, let's look at the 4 incremental steps to create the figure. 
+
+1. Plot a [polar bar chart](https://matplotlib.org/stable/gallery/pie_and_polar_charts/polar_bar.html) using only the default configuration. 
+It won't look too great; you can't see any of the individual bars and the figure looks a bit like a distorted circle. 
+2. Add some transparency by setting the `alpha` parameter to 0.4. We start seeing some details, but the center 
+still looks very dense. 
+3. Instead of having the `width` (=0.8) the same for each bar, let's grow it linearly with each point being plotted,
+i.e., `width=np.linspace(np.pi / 32, np.pi / 8, len(theta))`. Now we're getting somewhere. 
+4. To top it all off, let's add some colours which will start "#8d7ed8" and end at "#5bffef" using linear interpolation. 
+
+With these steps we successfully have created some polar art! 
+
+![0-baseline.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/polar-slices/0-baseline.png)
+
+#### Additional Parameters 
+There's a couple of parameters you can play around with. 
+For example, the _sparsify_ method when preprocessing the data:
+
+![1-sparsify-methods.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/polar-slices/1-sparsify-methods.png)
+
+The _total number of data samples_ to plot: 
+
+![2-max-samples.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/polar-slices/2-max-samples.png)
+
+The _colours_ to use: 
+
+![3-colours.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/polar-slices/3-colours.png)
+
+
+The amount of _transparency_ to set: 
+
+![4-alphas.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/polar-slices/4-alphas.png)
+
+Allowing the y-axis (representing magnitude) to use a _log axis_:
+
+![5-alphas-logY.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/polar-slices/5-alphas-logY.png)
+
+
+[//]: # (With all these in mind, my final choice was the following: )
+
+[//]: # (![final-polar-slices_dpi-600.png]&#40;https://raw.githubusercontent.com/bmistry4/audio-art/main/images/polar-slices/final-polar-slices_dpi-600.png&#41;)
+
+### Turning Polar: Floral Vibes 
+**Motivation**: I like the look of the polar plot, but I wanted something a bit softer for the shape of the bars, 
+like petals to give it some floral-like look. I also wanted the image to look more busy and dynamic to try to represent 
+the different emotions that may have occurred while the person who recorded this audio felt while hiking. 
+
+To make the bars of the previous plots look more like petals, you can plot coloured in Bézier curves using the matplotlib's [PathPatch](https://matplotlib.org/stable/api/_as_gen/matplotlib.patches.PathPatch.html). 
+Each PathPatch will take a Path that tells you how to draw a petal from 4 points (start point, 2 control points and an end point). 
+Like before, we'll use different colours and transparencies to make a nice layered effect.
+
+#### Centerpiece: Lapsing Emotions
+**Code**: [Click here](https://github.com/bmistry4/audio-art/blob/main/src/polar_floral_full.py)
+
+First let's get something similar to what I just described: 
+
+1. Plot bars in shape of petals. Below is an example of drawing 2 petals
+2. Plot all the petals for the full preprocessed audio. So far, it'll look like a bumpy circle.
+3. Add colour to each petal. We still can't see too many petals though...
+4. Add a fixed amount transparency (=0.4) to all petals. Now we can see some layering. 
+5. Use adaptive transparencies so each bin of data will be less transparent. Results in a nice fade out effect.
+6. Instead of having the width (=0.8) the same for each point, let's grow it linearly with each point being plotted, 
+i.e., width=np.linspace(np.pi / 32, np.pi / 8, len(theta)).
+7. (Extra) Colour in the edges rather than the petals.
+
+![0-baseline.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/polar-floral-full/0-baseline.png)
+
+Now we've got a good starting point, let's play around with some parameters...
+
+When drawing the petals, we can change how far from the origin we plot from. 
+Increasing this _offset_ can result in a small hole in the center of the figure. 
+We can also have adaptive offset values, which mean the offset will linearly increase with each new bin of data to plot. 
+
+![1-radii-offset.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/polar-floral-full/1-radii-offset.png)
+
+Using different data _sparsity methods_:
+
+![2-sparsify.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/polar-floral-full/2-sparsify.png)
+
+_Normalising_ the audio data after it's been fourier transformed:
+
+![3-norm.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/polar-floral-full/3-norm.png)
+
+Adapting the _number of bins_:
+
+![4-binsNum.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/polar-floral-full/4-binsNum.png)
+
+Or the number of data _samples in a bin_:
+
+![5-binsSize.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/polar-floral-full/5-binsSize.png)
+
+And there's always the choice of the _colour scheme_! 
+
+![6-colours.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/polar-floral-full/6-colours.png)
+
+[//]: # (The final product looks like this! )
+
+[//]: # (![final-polar-floral-center-round_dpi-600.png]&#40;https://raw.githubusercontent.com/bmistry4/audio-art/main/images/polar-floral-full/final-polar-floral-center-round_dpi-600.png&#41;)
+
+#### Capturing Minutes: Floral Border
+**Code**: [Click here](https://github.com/bmistry4/audio-art/blob/main/src/polar_floral_segments_circle.py)
+
+**Motivation** The centerpiece images above looks like a neat piece containing data from the full length clip. 
+But I feel something a bit more fine-grained, like having a image representing ever minute-or-so would be a nice touch. 
+So let's make a circular border which has small flower-like images, where each flower represents a minute of data. 
+I've made some slight changes to what the image represents. 
+- Each flower represents a small chunk of audio. (I'll use 16 flowers to represent each minute of my 16-minute audio.)  
+- The radius from the polar coordinates is still used to determine the length of the petal
+- The width of the petal is fixed to pi/8  
+- The theta of the polar coordinates is no longer used. Instead, the data is plotted in order in an anticlockwise fashion.
+So, the start of the audio is at angle 0 degrees and the end of the audio would have done the full loop and be at 360 degrees.
+
+Now let's look at some examples.
+First see how the flowers are organised; you get an evenly spaced out circular border: 
+
+![3-binsNum.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/polar-floral-segments-circle/3-binsNum.png)
+
+Using the different data _sparsity methods_:
+ 
+![1-sparsify.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/polar-floral-segments-circle/1-sparsify.png)
+
+Increasing the _radii offset_: 
+
+![2-radii-offset.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/polar-floral-segments-circle/2-radii-offset.png)
+
+Changing the number of allowed datapoints to represent a single flower (i.e., _bin size_):
+
+![4-binSize.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/polar-floral-segments-circle/4-binSize.png)
+
+And finally, different _colour schemes_:
+
+![5-colours.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/polar-floral-segments-circle/5-colours.png)
+
+
+#### Combining Components - Floral Border and Center 
+**Code**: [Click here](https://github.com/bmistry4/audio-art/blob/main/src/polar_floral_border_and_center.py)
+
+**Motivation**: I thought it would be a nice to have a piece which had both the fine-grained boarder data which 
+showed a flower for each minute's worth of data and also have a centerpiece which represented the entire length of 
+audio in a single image. 
+
+![final-polar-floral-borderAndCenter_dpi-600.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/polar-floral-border-and-center/final-polar-floral-borderAndCenter_dpi-600.png)
+
+
+## Scannable Art with QR Codes 
+> Handy (additional) resource(s): 
+> - Article explaining more details on using qrcode: [https://medium.com/@reegan_anne/fully-customizable-qr-codes-in-python-7eb8a7c3b0da](https://medium.com/@reegan_anne/fully-customizable-qr-codes-in-python-7eb8a7c3b0da)
+{: .prompt-info}
+
+**Code**: [Click here](https://github.com/bmistry4/audio-art/blob/main/src/qr_code_generator.py)
+
+Now for the cherry on top! 
+Since the art was created from an audio sample let's add a QR code component which we can scan to get us to the audio 
+clip!
+<span style="color: red;">Since the art pieces I've shown have been created using a private audio clip, 
+I'll instead set the QR link to my website.</span>
+
+Conveniently, there already exists a QR code generator library called [qrcode](https://github.com/lincolnloop/python-qrcode)! 
+There's some neat features which we'll use from it including: 
+- Having a link to some website/link/text (your choice!)
+- Having a center image
+- Having a background image underneath the qr code
+- Having different qr code styles (module drawers)
+
+
+Just generating the QR code to the link will look like this: 
+
+
+<!-- <p align="center">
+  <img src="https://raw.githubusercontent.com/bmistry4/audio-art/main/images/qrcode/blog/save/qrcode_bkgNone_logoNone_dpi-600_VerticalBarsDrawer.png" alt="qrcode_bkgNone_logoNone_dpi-600_VerticalBarsDrawer.png" width="60%"/>
+</p> -->
+
+![qrcode_bkgNone_logoNone_dpi-600_VerticalBarsDrawer.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/qrcode/blog/save/qrcode_bkgNone_logoNone_dpi-600_VerticalBarsDrawer.png){:width="60%"}
+
+Now, let's take floral center and border art piece from earlier add it to the center: 
+
+<!-- <p align="center">
+  <img src="https://raw.githubusercontent.com/bmistry4/audio-art/main/images/qrcode/blog/save/qrcode_bkgNone_logoFloralBorderAndCenter_dpi-600_VerticalBarsDrawer.png" alt="qrcode_bkgNone_logoFloralBorderAndCenter_dpi-600_VerticalBarsDrawer.png" width="60%"/>
+</p> -->
+
+![qrcode_bkgNone_logoFloralBorderAndCenter_dpi-600_VerticalBarsDrawer.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/qrcode/blog/save/qrcode_bkgNone_logoFloralBorderAndCenter_dpi-600_VerticalBarsDrawer.png){:width="60%"}
+
+Ok, looks a bit bland...let's fix that! 
+What if we used it as the background image instead of having it in the center? 
+
+<!-- <p align="center">
+  <img src="https://raw.githubusercontent.com/bmistry4/audio-art/main/images/qrcode/blog/save/qrcode_bkgFloralBorderAndCenter_logoNone_dpi-600_VerticalBarsDrawer.png" alt="qrcode_bkgFloralBorderAndCenter_logoNone_dpi-600_VerticalBarsDrawer.png" width="60%"/>
+</p> -->
+![qrcode_bkgFloralBorderAndCenter_logoNone_dpi-600_VerticalBarsDrawer.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/qrcode/blog/save/qrcode_bkgFloralBorderAndCenter_logoNone_dpi-600_VerticalBarsDrawer.png){:width="60%"}
+
+It makes it difficult to see the centerpiece, but the border doesn't look too shabby. Let's just use the border as the background instead: 
+
+<!-- <p align="center">
+  <img src="https://raw.githubusercontent.com/bmistry4/audio-art/main/images/qrcode/blog/save/qrcode_bkgFloralBorder_logoNone_dpi-600_VerticalBarsDrawer.png" alt="qrcode_bkgFloralBorder_logoNone_dpi-600_VerticalBarsDrawer.png" width="60%"/>
+</p> -->
+
+![qrcode_bkgFloralBorder_logoNone_dpi-600_VerticalBarsDrawer.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/qrcode/blog/save/qrcode_bkgFloralBorder_logoNone_dpi-600_VerticalBarsDrawer.png){:width="60%"}
+
+You can't see much of the border, so let's use a "thicker" border which had a smaller radius: 
+
+<!-- <p align="center">
+  <img src="https://raw.githubusercontent.com/bmistry4/audio-art/main/images/qrcode/blog/save/qrcode_bkgFloralThickBorder_logoNone_dpi-600_VerticalBarsDrawer.png" alt="qrcode_bkgFloralThickBorder_logoNone_dpi-600_VerticalBarsDrawer.png" width="60%"/>
+</p> -->
+
+![qrcode_bkgFloralThickBorder_logoNone_dpi-600_VerticalBarsDrawer.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/qrcode/blog/save/qrcode_bkgFloralThickBorder_logoNone_dpi-600_VerticalBarsDrawer.png){:width="60%"}
+
+Better! Now let's add back in a center image but use a version which does not have a floral border: 
+
+<!-- <p align="center">
+  <img src="https://raw.githubusercontent.com/bmistry4/audio-art/main/images/qrcode/blog/save/qrcode_bkgFloralThickBorder_logoFloralCenter_dpi-600_VerticalBarsDrawer.png" alt="qrcode_bkgFloralThickBorder_logoFloralCenter_dpi-600_VerticalBarsDrawer.png" width="60%"/>
+</p> -->
+
+![qrcode_bkgFloralThickBorder_logoFloralCenter_dpi-600_VerticalBarsDrawer.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/qrcode/blog/save/qrcode_bkgFloralThickBorder_logoFloralCenter_dpi-600_VerticalBarsDrawer.png){:width="60%"}
+
+Or instead, let's use a different center image... maybe one of the funky frequency waves? 
+
+<!-- <p align="center">
+  <img src="https://raw.githubusercontent.com/bmistry4/audio-art/main/images/qrcode/blog/save/qrcode_bkgThickFloralBorder_logoWaves_dpi-600_VerticalBarsDrawer.png" alt="qrcode_bkgThickFloralBorder_logoWaves_dpi-600_VerticalBarsDrawer.png" width="60%"/>
+</p> -->
+
+![qrcode_bkgThickFloralBorder_logoWaves_dpi-600_VerticalBarsDrawer.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/qrcode/blog/save/qrcode_bkgThickFloralBorder_logoWaves_dpi-600_VerticalBarsDrawer.png){:width="60%"}
+
+And voilà! A lovely piece of art which can be scanned! 
+The qrcode library also gives you options to play around with the qrcode style by modifying the `module_drawer` argument
+for the `make_image` method. So far, the qrcodes you've been seeing have been using the `VerticalBarsDrawer`. 
+
+All possible options include: `CircleModuleDrawer`, `GappedSquareModuleDrawer`, `HorizontalBarsDrawer`, `RoundedModuleDrawer`, `SquareModuleDrawer`, and `VerticalBarsDrawer` and are shown below. 
+
+![qrcode_bkgThickFloralBorder_logoWaves_dpi-600-ModuleDrawers.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/qrcode/blog/save/module_drawer/qrcode_bkgThickFloralBorder_logoWaves_dpi-600-ModuleDrawers.png)
+
+You may have noticed the thick black borders around the QR codes. 
+I needed this because I ended up printing this qrcode onto a canvas. I wanted the canvas to have wrapped edges 
+so need this thick border to avoid the qrcode being wrapped around the edges when printed. 
+
+## Canvas Print
+For those interested, I used [photobox](https://www.photobox.co.uk/) to print and deliver my canvas. Specifically I created a 
+square 30x30cm canvas print with the wrap (edges) option - see [https://www.photobox.co.uk/shop/canvas-prints/simple-canvas](https://www.photobox.co.uk/shop/canvas-prints/simple-canvas).
+The printed canvas looked great and the scan worked perfectly! 
+
+Here's it is (<span style="color: red;">I've added markings on the QR code to stop the scan from working since it's for private use only)</span>: 
+
+![canvas print damaged.jpg](images%2Fcanvas%20print%20damaged.jpg)
+
+_Just in time for Christmas! :D_
+
+## Conclusion
+A there we have it! 
+We've covered how convert an audio clip to different pieces of art and even add make it scannable using QR codes! 
+If you want to try it on your own audio files be my guest! You can find all the code available at [https://github.com/bmistry4/audio-art!](https://github.com/bmistry4/audio-art!) 
+
