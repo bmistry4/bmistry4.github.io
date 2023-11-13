@@ -10,6 +10,42 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Poppins&display=swap');
 
+/******************************************************************************************************************/
+/* Define variables which can be reused throughout the code */
+/* :root {
+  --col-body-bkg: rgb(225, 247, 236);
+
+  --col-timeline-body-bkg: #072736;
+  --col-timeline-bkg-segment: #072736;
+  --col-timeline-bkg-hover: #075c83;
+
+  --col-timeline-date: #1685b8;
+  --col-timeline-seg-title: #34ace0;
+  --col-timeline-content-text: white;
+
+  --col-timeline-vline: #094a68;
+  --col-timeline-bp: #34ace0;
+  --col-timeline-bp-hover: #0F0;
+} */
+
+:root {
+  --col-body-bkg: rgb(237, 243, 239);
+
+  --col-timeline-body-bkg: #2b374e;
+  --col-timeline-bkg-segment: #232D3F;
+  --col-timeline-bkg-hover: #435585;
+
+  --col-timeline-date: #818FB4;
+  --col-timeline-date-text: #ffffff;
+  --col-timeline-seg-title: #d8ba94;
+  --col-timeline-content-text: #ebe1cd;
+
+  --col-timeline-vline: #CDFAD5;
+  --col-timeline-bp: rgb(150, 184, 179);
+  --col-timeline-bp-hover: #e4d581;
+}
+
+/******************************************************************************************************************/
 
 * {
   padding: 0px;
@@ -17,8 +53,7 @@
 }
 
 body {
-  background-color: rgb(225, 247, 236);
-  /* background-color: #d1e8e2; */
+  background-color: var(--col-body-bkg);
   width: 100%;
   justify-content: center;
   align-items: center;
@@ -36,24 +71,26 @@ body {
 
 
 a {
-  color: #25dff7;
+  /* color: #25dff7; */
+  color: #87C4FF;
 }
 
 a:hover {
-  color: #25f753;
+  /* color: #25f753; */
+  color: #f7e225;
   transition: all 0.5s ease-in-out 0s;
 }
 
-
+/******************************************************************************************************************/
 #about {
   /* position: relative; */
   text-align: center;
-  color: #08103b;
+  /* color: #08103b; */
   margin: 0;
   padding: 0;
 
   background: url("../img/about-boat.jpg") repeat scroll center center/cover;
-  mix-blend-mode: exclusion;
+  /* mix-blend-mode: exclusion; */
 
 }
 
@@ -119,20 +156,18 @@ a:hover {
   /* margin: 0; */
 }
 
-
+/******************************************************************************************************************/
 body section h2 {
   text-align: center;
 }
 
+/******************************************************************************************************************/
 /* Timeline (start) ------ */
 
 .timeline {
   margin: auto;
   width: 60%;
-  /* background col */
-  background-color: #072736;
-  /* background-color: #116466; */
-  color: #fff;
+  background-color: var(--col-timeline-body-bkg);
   padding: 10px 20px;
   box-shadow: 0px 0px 10px rgba(0, 0, 0, .5);
 }
@@ -140,36 +175,34 @@ body section h2 {
 .timeline #timeline-line {
   perspective: 800px;
   list-style-type: none;
-  /* verticle line colour */
-  border-left: 2px solid #094a68;
-  /* padding: 10px 5px; */
+  border-left: 2px solid var(--col-timeline-vline);
 }
 
 
 .timeline span {
   display: inline;
-  /* year span */
-  background-color: #1685b8;
+  background-color: var(--col-timeline-date);
+  color: var(--col-timeline-date-text);
   border-radius: 25px;
   padding: 2px 5px;
-  font-size: 15px;
+  font-size: 16px;
   text-align: center;
 }
 
 .timeline h3 {
   display: inline-block;
   /* heading for segment */
-  color: #34ace0;
-  font-size: 17px;
+  color: var(--col-timeline-seg-title);
+  font-size: 20px;
   padding-left: 5px;
 }
 
 .timeline .collapsible {
-  color: white;
+  color: var(--col-timeline-content-text);
   display: inline-block;
   /* segment bkg colour - just let it overrride don't need it */
-  /* background-color: #072736; */
-  font-size: 15px;
+  background-color: var(--col-timeline-bkg-segment);
+  font-size: 18px;
   text-align: left;
   padding: 15px 0px 0px 20px;
   cursor: pointer;
@@ -180,11 +213,10 @@ body section h2 {
 .timeline .collapsible-content {
   text-align: left;
   padding: 0px 0px 2px 0px;
-  font-size: 15px;
+  font-size: 16px;
   max-height: 0;
   overflow: hidden;
   transition: max-height 0.2s ease-out;
-  /* background-color: #f1f1f1; */
 }
 
 /* bullet point  */
@@ -193,7 +225,7 @@ body section h2 {
   content: '';
   width: 10px;
   height: 10px;
-  background-color: #34ace0;
+  background-color: var(--col-timeline-bp);
   border-radius: 50%;
   left: -7px;
   transition: .5s;
@@ -205,38 +237,39 @@ body section h2 {
 }
 
 .timeline .collapsible-content .show-points {
-  /* text-align: center; */
   list-style: inside;
 }
 
 /*  segment on hover */
 .timeline ul .collapsible:hover {
-  background-color: #075c83;
-  /* background-color: #071f2a; */
+  background-color: var(--col-timeline-bkg-hover);
 }
 
 .timeline ul .collapsible:hover:before {
-  background-color: #0F0;
-  box-shadow: 0px 0px 10px 2px #0F0;
+  background-color: var(--col-timeline-bp-hover);
+  box-shadow: 0px 0px 10px 2px var(--col-timeline-bp-hover);
 }
 
-/* @media (max-width:300px) {
+@media (max-width:300px) {
   .timeline {
     width: 100%;
     padding: 30px 5px 30px 10px;
   }
-} */
+}
 
 
+#navbar .active {
+  box-shadow: 1px 1px 1px 1px #d8ba94;
+}
 
-/* .active,
+.active,
 .timeline .collapsible:hover {
-  box-shadow: 0px 0px 2px 2px rgb(183, 224, 183);
-} */
+  box-shadow: 1px 1px 1px 1px var(--col-timeline-vline);
+}
 
 
 /* ----- Timeline (end) */
-
+/******************************************************************************************************************/
 
 
 
@@ -244,12 +277,9 @@ body section h2 {
 # Header
 --------------------------------------------------------------*/
 #header {
-  /* transition: all 0.5s; */
-  /* z-index: 997; */
   padding: 15px 0;
   background-color: #fff;
-  /* top: -100%; */
-  box-shadow: 0px 2px 25px rgba(0, 0, 0, 0.08);
+  box-shadow: 0px 2px 25px rgba(0, 0, 0, 0.3);
 }
 
 #header.header-scrolled,
@@ -281,7 +311,7 @@ body section h2 {
     border: 0;
   }
 } */
-
+/******************************************************************************************************************/
 /*--------------------------------------------------------------
 # Navigation Menu
 --------------------------------------------------------------*/
@@ -423,7 +453,7 @@ body section h2 {
   display: block;
 }
 
-
+/******************************************************************************************************************/
 /*--------------------------------------------------------------
 # Portfolio (start) -----
 --------------------------------------------------------------*/
@@ -484,12 +514,10 @@ body section h2 {
   text-align: center;
   font-size: 1.3em;
   color: #000000;
-  /* color: #666; */
   font-weight: 600;
 }
 
 #portfolio .portfolio-item .portfolio-info p {
-  /* color: #999; */
   color: #000000;
   font-size: 1.1em;
 }
@@ -507,7 +535,6 @@ body section h2 {
   right: 50px;
   font-size: 2em;
   bottom: calc(0%);
-  /* color: #b8a07e; */
   color: #383128;
 }
 
@@ -526,3 +553,4 @@ body section h2 {
 /*--------------------------------------------------------------
 # ----- Portfolio (end) 
 --------------------------------------------------------------*/
+/******************************************************************************************************************/
