@@ -283,7 +283,7 @@ Finally, we can also try out different _colour schemes_:
 **Motivation**: Instead of waves which are sequential, how about something a bit more circular. 
 So plot points going around a circle, over and over again. 
 Since the FFT returns _complex numbers_ it naturally allows us to dabble with polar plots since complex numbers can 
-also be expressed as [polar coordinates](#polar-coordinates---what-are-they-)!
+also be expressed as [polar coordinates](#polar-coordinates---what-are-they)!
 Converting the complex numbers from the cartesian form to the polar form results in a magnitude and phase for each data point. 
 
 #### Basic Polar Plot
@@ -529,7 +529,8 @@ The printed canvas looked great and the scan worked perfectly!
 
 Here's it is (<span style="color: red;">I've added markings on the QR code to stop the scan from working since it's for private use only)</span>: 
 
-![canvas print damaged.jpg](images%2Fcanvas%20print%20damaged.jpg)
+TODO - ADD IMAGE
+<!-- ![canvas print damaged.jpg](images%2Fcanvas%20print%20damaged.jpg) -->
 
 _Just in time for Christmas! :D_
 
