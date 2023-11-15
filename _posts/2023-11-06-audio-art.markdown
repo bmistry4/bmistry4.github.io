@@ -16,15 +16,15 @@ image: https://raw.githubusercontent.com/bmistry4/audio-art/main/images/qrcode/b
 - **What?** Turn an audio clip into a piece of art using maths and Python.
 
 
-- **Why?** (_Motivation/Background story_.) A few months ago, someone close to me had gone on a holiday to Wales, 
-specifically, to climb Mount Snowdon. (Snowdon is the highest mountain in Wales, with a height of 1,085m!) On a good day 
-this is a mighty LONG trek (~5-7 hrs), so as you can imagine, on a stormy day this is a might LONG and HARD trek. 
-With it being the typical British weather, of course there was a storm, and with this person's luck, of course it 
-was a big one (Storm Antoni to be specific)! Long story short nothing of theirs went to plan. This included the weather, 
-the time of the hike, finding the spare torch batteries, finding the train to back down the mountain, or remembering their 
+- **Why?** (_Motivation/Background story_.) A few months ago, someone close to me went on a holiday to Wales, 
+specifically, to climb Mount Snowdon (Snowdon is the highest mountain in Wales, with a height of 1,085m!). On a good day 
+this is a mighty LONG trek (~5-7 hrs), so as you can imagine, on a stormy day this is a mighty LONG and HARD trek. 
+With it being typical British weather, of course there was a storm, and with this persons' luck, of course it 
+was a big one (Storm Antoni to be specific)! Long story short nothing went to plan. This included the weather, 
+the time of the hike, finding the spare torch batteries, finding the train to go back down the mountain, or remembering their 
 toothbrush during their stay! But even with all those setbacks and awful conditions, they still managed to do the hike! 
-After completing the hike (and regaining the feeling in their fingers), I was sent an audio message (~15-16 mins long) 
-explaining their journey from start to end. Listening to their monologue, I thought "Wow, what a journey and heck of an 
+After completing the hike (and regaining feeling in their fingers), I was sent an audio message (~15-16 mins long) 
+explaining their journey from start to end. Listening to their monologue, I thought "Wow, what a journey and a heck of an 
 experience!". I wanted to make something personal for them as a reminder of their little adventure, and since art is 
 fun and expressive I thought why not!
 
@@ -142,7 +142,7 @@ As the names imply, the CFT is applied to continuous signals while the DFT is ap
 Audio files (e.g. wav, ogg, or mp3)  are an example of discrete signals as they all use digital sampling to encode the data. 
 
 #### What's the FAST Fourier Transform (FFT)
-The FFT is an algorithm to calculate the DFT. As the name implies, it's fast to compute so is used alot in practice. 
+The FFT is an algorithm to calculate the DFT. As the name implies, it's fast to compute so is used a lot in practice. 
 You can use scipy to calculate the DFT using FFT (see `scipy.fft` [docs](https://docs.scipy.org/doc/scipy/tutorial/fft.html)):
 
 ![frequency_domain_full.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/frequency_domain_full.png)
@@ -169,7 +169,7 @@ Instead of using the x and y coordinates for a point’s position like in cartes
 **magnitude r** and **phase θ**. 
 A point P is defined by **(r,θ)**, where r is the distance from the origin and the θ is an angle (measured in degrees/radians) 
 starting from the origin pointing in positive x-axis direction to the point P. 
-You can convert between the cartesian and polar coordinates, but that is out of the score of this blog. 
+You can convert between the cartesian and polar coordinates, but that is out of the scope of this blog. 
 
 There can be cases where it's easier to represent/interpret data using polar coordinates than cartesian, so it's handy 
 to know about! One such case is with complex numbers, which are exactly the kind of values returned when applying the FFT. 
@@ -182,7 +182,7 @@ I had two personal criteria when creating the art:
 1. Make it look nice
 1. Make it meaningful
 
-Since first is subjective, I'll just my gut instinct. 
+Since first is subjective, I'll just use my gut instinct. 
 The second is because I want this art piece to be a memorable gift. 
 
 ### Data Sparsity Methods
@@ -190,7 +190,7 @@ A problem I encountered early on was the issue of dealing with the masses of dat
 The audio clip was _nearly 16 mins_ of data with a _sample rate of 48000 Hz_. 
 That means for each second there was 48,000 separate data points, meaning I had to somehow express _~45 million data 
 points_ into a single image. 
-To deal with this, I had a spasification step to reduce the number of data points. 
+To deal with this, I had a sparsification step to reduce the number of data points. 
 This step will be used in all the art pieces. 
 I considered three ways: 
 1. `random`: drop random points until you're within a max sample threshold
@@ -207,7 +207,7 @@ I considered three ways:
 I wanted to keep in the time domain for this one. 
 That way you see the changes in the voice over time which would represent the challenge of climbing up a mountain.
 I envisioned something like breaking the audio clip into small intervals and plotting each interval using time vs amplitude. 
-Each interval would be stacked ontop of eachother since having them all one after another would be too long horizontally. 
+Each interval would be stacked on top of each other since having them all one after another would be too long horizontally. 
 
 #### Stack plot with smoothing
 To create the overlapping effect, I used a [stack plot](https://python-graph-gallery.com/streamchart-basic-matplotlib/). 
@@ -527,7 +527,7 @@ For those interested, I used [photobox](https://www.photobox.co.uk/) to print an
 square 30x30cm canvas print with the wrap (edges) option - see [https://www.photobox.co.uk/shop/canvas-prints/simple-canvas](https://www.photobox.co.uk/shop/canvas-prints/simple-canvas).
 The printed canvas looked great and the scan worked perfectly! 
 
-Here's it is (<span style="color: red;">I've added markings on the QR code to stop the scan from working since it's for private use only)</span>: 
+Here it is (<span style="color: red;">I've added markings on the QR code to stop the scan from working since it's for private use only)</span>: 
 
 TODO - ADD IMAGE
 <!-- ![canvas print damaged.jpg](images%2Fcanvas%20print%20damaged.jpg) -->
@@ -535,7 +535,7 @@ TODO - ADD IMAGE
 _Just in time for Christmas! :D_
 
 ## Conclusion
-A there we have it! 
-We've covered how convert an audio clip to different pieces of art and even add make it scannable using QR codes! 
-If you want to try it on your own audio files be my guest! You can find all the code available at [https://github.com/bmistry4/audio-art!](https://github.com/bmistry4/audio-art!) 
+And there we have it! 
+We've covered how to convert an audio clip to different pieces of art and even add make it scannable using QR codes! 
+If you want to try it on your own audio files be my guest! You can find all the code available at [https://github.com/bmistry4/audio-art](https://github.com/bmistry4/audio-art)!
 
