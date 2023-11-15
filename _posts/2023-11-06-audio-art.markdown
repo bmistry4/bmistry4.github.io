@@ -175,7 +175,7 @@ There can be cases where it's easier to represent/interpret data using polar coo
 to know about! One such case is with complex numbers, which are exactly the kind of values returned when applying the FFT. 
 
 
-## The Art: Making Asethetic Pictures From Audio
+## The Art: Making Aesthetic Pictures From Audio
 Keeping to the mindset of _'it's not a bug, it's a feature'_ but for an art context - _'it's not ugly, it's intentional"_,
 I had two personal criteria when creating the art:
 
@@ -221,7 +221,7 @@ Now we're getting somewhere!
 #### Colour and Transparency
 Ok, let's add some colour and transparency. 
 For colouring, we'll define a colour to start at and a colour to end at and interpolate between them so each bin (wave)
-has its own colour. Let's also do the same for transparency aswell (starting at 0.8 and reducing to 0.4).
+has its own colour. Let's also do the same for transparency as well (starting at 0.8 and reducing to 0.4).
 
 ![1-gaussian-cols-alphas.png](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/freq-waves-overlapping/1-gaussian-cols-alphas.png)
 
