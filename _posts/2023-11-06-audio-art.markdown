@@ -529,8 +529,7 @@ The printed canvas looked great and the scan worked perfectly!
 
 Here it is (<span style="color: red;">I've added markings on the QR code to stop the scan from working since it's for private use only)</span>: 
 
-TODO - ADD IMAGE
-<!-- ![canvas print damaged.jpg](images%2Fcanvas%20print%20damaged.jpg) -->
+![canvas print damaged.jpg](https://raw.githubusercontent.com/bmistry4/audio-art/main/images/canvas%20print%20damaged.jpg)
 
 _Just in time for Christmas! :D_
 
